@@ -4,7 +4,7 @@ A small REST API for managing tennis players and computing statistics about them
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20+
 - npm
 
 ## Installation
