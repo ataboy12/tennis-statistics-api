@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { PlayerService } from '../services/player.service'
 import { ValidationError } from '../errors'
+import { newPlayerSchema } from '../validation/player.schema'
 
 export class PlayerController {
 	constructor(private readonly playerService: PlayerService) {}
@@ -15,5 +16,15 @@ export class PlayerController {
 		}
 
 		res.json(this.playerService.getById(id))
+	}
+
+	create = (req: Request, res: Response) => {
+		const parsed = newPlayerSchema.safeParse(req.body)
+
+		if (!parsed.success) {
+			throw new ValidationError(parsed.error.message)
+		}
+
+		res.status(201).json(this.playerService.create(parsed.data))
 	}
 }

@@ -11,4 +11,13 @@ export class PlayerRepository {
 	findById(id: number): Player | undefined {
 		return this.players.find((p) => p.id === id)
 	}
+
+	create(player: Player): Player {
+		this.players.push(player)
+		return player
+	}
+
+	nextId(): number {
+		return this.players.reduce((max, p) => Math.max(max, p.id), 0) + 1
+	}
 }

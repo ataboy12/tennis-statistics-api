@@ -1,6 +1,7 @@
 import { NotFoundError } from '../errors'
 import { PlayerRepository } from '../repositories/player.repository'
 import { Player } from '../types/player'
+import { NewPlayerInput } from '../validation/player.schema'
 
 export class PlayerService {
 	constructor(private readonly playerRepository: PlayerRepository) {}
@@ -17,5 +18,12 @@ export class PlayerService {
 		}
 
 		return player
+	}
+
+	create(input: NewPlayerInput): Player {
+		return this.playerRepository.create({
+			id: this.playerRepository.nextId(),
+			...input,
+		})
 	}
 }

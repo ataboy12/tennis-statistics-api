@@ -22,11 +22,16 @@ const player = (f: { id?: number; code?: string; rank?: number; weight?: number;
 })
 
 describe('PlayerService', () => {
-	let playerRepository: jest.Mocked<Pick<PlayerRepository, 'findAll' | 'findById'>>
+	let playerRepository: jest.Mocked<Pick<PlayerRepository, 'findAll' | 'findById' | 'nextId' | 'create'>>
 	let playerService: PlayerService
 
 	beforeEach(() => {
-		playerRepository = { findAll: jest.fn(), findById: jest.fn() }
+		playerRepository = {
+			findAll: jest.fn(),
+			findById: jest.fn(),
+			nextId: jest.fn(),
+			create: jest.fn(),
+		}
 		playerService = new PlayerService(playerRepository as unknown as PlayerRepository)
 	})
 
@@ -54,6 +59,17 @@ describe('PlayerService', () => {
 		it('throws NotFoundError when missing', () => {
 			playerRepository.findById.mockReturnValue(undefined)
 			expect(() => playerService.getById(999)).toThrow(NotFoundError)
+		})
+	})
+
+	describe('create', () => {
+		it('assigns the next id and delegates to the repository', () => {
+			playerRepository.nextId.mockReturnValue(103)
+			playerRepository.create.mockImplementation((p) => p)
+			const input = { firstname: 'New' } as any
+			const result = playerService.create(input)
+			expect(playerRepository.create).toHaveBeenCalledWith({ id: 103, ...input })
+			expect(result.id).toBe(103)
 		})
 	})
 })
