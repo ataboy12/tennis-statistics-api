@@ -7,11 +7,12 @@ const mockRes = () => {
 	const r: any = {}
 	r.status = jest.fn().mockReturnValue(r)
 	r.json = jest.fn().mockReturnValue(r)
+	r.send = jest.fn().mockReturnValue(r)
 	return r as Response
 }
 
 describe('PlayerController', () => {
-	let playerService: jest.Mocked<Pick<PlayerService, 'getAllSorted' | 'getById' | 'create'>>
+	let playerService: jest.Mocked<Pick<PlayerService, 'getAllSorted' | 'getById' | 'create' | 'update' | 'delete'>>
 	let playerController: PlayerController
 
 	beforeEach(() => {
@@ -19,6 +20,8 @@ describe('PlayerController', () => {
 			getAllSorted: jest.fn(),
 			getById: jest.fn(),
 			create: jest.fn(),
+			update: jest.fn(),
+			delete: jest.fn(),
 		}
 		playerController = new PlayerController(playerService as unknown as PlayerService)
 	})
@@ -70,5 +73,54 @@ describe('PlayerController', () => {
 		const res = mockRes()
 
 		expect(() => playerController.create({ body: { firstname: '' } } as any, res)).toThrow(ValidationError)
+	})
+
+	it('update responds with the updated player', () => {
+		const updated = { id: 7 } as any
+		playerService.update.mockReturnValue(updated)
+		const res = mockRes()
+
+		playerController.update({ params: { id: '7' }, body: { firstname: 'Novak' } } as any, res)
+
+		expect(playerService.update).toHaveBeenCalledWith(7, { firstname: 'Novak' })
+		expect(res.json).toHaveBeenCalledWith(updated)
+	})
+
+	it('update throws ValidationError on a non integer id', () => {
+		const res = mockRes()
+
+		expect(() => playerController.update({ params: { id: 'abc' }, body: { firstname: 'Novak' } } as any, res)).toThrow(ValidationError)
+		expect(playerService.update).not.toHaveBeenCalled()
+	})
+
+	it('update throws ValidationError on an invalid body', () => {
+		const res = mockRes()
+
+		expect(() => playerController.update({ params: { id: '7' }, body: { firstname: '' } } as any, res)).toThrow(ValidationError)
+		expect(playerService.update).not.toHaveBeenCalled()
+	})
+
+	it('update throws ValidationError on an empty body', () => {
+		const res = mockRes()
+
+		expect(() => playerController.update({ params: { id: '7' }, body: {} } as any, res)).toThrow(ValidationError)
+		expect(playerService.update).not.toHaveBeenCalled()
+	})
+
+	it('delete responds 204 with no body', () => {
+		const res = mockRes()
+
+		playerController.delete({ params: { id: '7' } } as any, res)
+
+		expect(playerService.delete).toHaveBeenCalledWith(7)
+		expect(res.status).toHaveBeenCalledWith(204)
+		expect(res.send).toHaveBeenCalled()
+	})
+
+	it('delete throws ValidationError on a non integer id', () => {
+		const res = mockRes()
+
+		expect(() => playerController.delete({ params: { id: 'abc' } } as any, res)).toThrow(ValidationError)
+		expect(playerService.delete).not.toHaveBeenCalled()
 	})
 })

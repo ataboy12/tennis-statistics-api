@@ -7,6 +7,8 @@ export function playerRoutes(playerController: PlayerController): Router {
 	router.get('/stats', playerController.getStatistics)
 	router.get('/:id', playerController.getById)
 	router.post('/', playerController.create)
+	router.patch('/:id', playerController.update)
+	router.delete('/:id', playerController.delete)
 
 	return router
 }

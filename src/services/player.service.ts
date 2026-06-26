@@ -2,7 +2,7 @@ import { NotFoundError } from '../errors'
 import { PlayerRepository } from '../repositories/player.repository'
 import { Player } from '../types/player'
 import { Statistics } from '../types/statistics'
-import { NewPlayerInput } from '../validation/player.schema'
+import { NewPlayerInput, UpdatePlayerInput } from '../validation/player.schema'
 
 export class PlayerService {
 	constructor(private readonly playerRepository: PlayerRepository) {}
@@ -26,6 +26,24 @@ export class PlayerService {
 			id: this.playerRepository.nextId(),
 			...input,
 		})
+	}
+
+	update(id: number, input: UpdatePlayerInput): Player {
+		const existing = this.getById(id)
+
+		const updated: Player = {
+			...existing,
+			...input,
+			country: { ...existing.country, ...input.country },
+			data: { ...existing.data, ...input.data },
+		}
+
+		return this.playerRepository.update(updated)
+	}
+
+	delete(id: number): void {
+		this.getById(id)
+		this.playerRepository.delete(id)
 	}
 
 	getStatistics(): Statistics {

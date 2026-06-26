@@ -22,7 +22,7 @@ const player = (f: { id?: number; code?: string; rank?: number; weight?: number;
 })
 
 describe('PlayerService', () => {
-	let playerRepository: jest.Mocked<Pick<PlayerRepository, 'findAll' | 'findById' | 'nextId' | 'create'>>
+	let playerRepository: jest.Mocked<Pick<PlayerRepository, 'findAll' | 'findById' | 'nextId' | 'create' | 'update' | 'delete'>>
 	let playerService: PlayerService
 
 	beforeEach(() => {
@@ -31,6 +31,8 @@ describe('PlayerService', () => {
 			findById: jest.fn(),
 			nextId: jest.fn(),
 			create: jest.fn(),
+			update: jest.fn(),
+			delete: jest.fn(),
 		}
 		playerService = new PlayerService(playerRepository as unknown as PlayerRepository)
 	})
@@ -70,6 +72,41 @@ describe('PlayerService', () => {
 			const result = playerService.create(input)
 			expect(playerRepository.create).toHaveBeenCalledWith({ id: 103, ...input })
 			expect(result.id).toBe(103)
+		})
+	})
+
+	describe('update', () => {
+		it('applies a partial update', () => {
+			const existing = player({ id: 7, rank: 5 })
+			playerRepository.findById.mockReturnValue(existing)
+			playerRepository.update.mockImplementation((p) => p)
+
+			const result = playerService.update(7, { firstname: 'Novak', data: { rank: 1 } })
+
+			expect(result.firstname).toBe('Novak')
+			expect(result.data.rank).toBe(1)
+			expect(result.data.points).toBe(existing.data.points)
+			expect(playerRepository.update).toHaveBeenCalledWith(expect.objectContaining({ id: 7 }))
+		})
+
+		it('throws NotFoundError when the player is missing', () => {
+			playerRepository.findById.mockReturnValue(undefined)
+			expect(() => playerService.update(999, { firstname: 'Ghost' })).toThrow(NotFoundError)
+			expect(playerRepository.update).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('delete', () => {
+		it('deletes an existing player', () => {
+			playerRepository.findById.mockReturnValue(player({ id: 7 }))
+			playerService.delete(7)
+			expect(playerRepository.delete).toHaveBeenCalledWith(7)
+		})
+
+		it('throws NotFoundError when the player is missing', () => {
+			playerRepository.findById.mockReturnValue(undefined)
+			expect(() => playerService.delete(999)).toThrow(NotFoundError)
+			expect(playerRepository.delete).not.toHaveBeenCalled()
 		})
 	})
 
