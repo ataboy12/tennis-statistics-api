@@ -4,6 +4,7 @@ import { PlayerController } from '../controllers/player.controller'
 export function playerRoutes(playerController: PlayerController): Router {
 	const router = Router()
 	router.get('/', playerController.getAll)
+	router.get('/stats', playerController.getStatistics)
 	router.get('/:id', playerController.getById)
 	router.post('/', playerController.create)
 
