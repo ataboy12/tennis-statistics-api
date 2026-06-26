@@ -27,4 +27,6 @@ export class PlayerController {
 
 		res.status(201).json(this.playerService.create(parsed.data))
 	}
+
+	getStatistics = (_: Request, res: Response) => res.json(this.playerService.getStatistics())
 }

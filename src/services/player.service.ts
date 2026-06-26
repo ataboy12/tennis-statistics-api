@@ -1,6 +1,7 @@
 import { NotFoundError } from '../errors'
 import { PlayerRepository } from '../repositories/player.repository'
 import { Player } from '../types/player'
+import { Statistics } from '../types/statistics'
 import { NewPlayerInput } from '../validation/player.schema'
 
 export class PlayerService {
@@ -25,5 +26,45 @@ export class PlayerService {
 			id: this.playerRepository.nextId(),
 			...input,
 		})
+	}
+
+	getStatistics(): Statistics {
+		const players = this.playerRepository.findAll()
+
+		// Country with highest win ratio
+		const byCountry = new Map<string, { wins: number; games: number }>()
+
+		for (const player of players) {
+			const agg = byCountry.get(player.country.code) ?? { wins: 0, games: 0 }
+			agg.wins += player.data.last.filter((r) => r === 1).length
+			agg.games += player.data.last.length
+			byCountry.set(player.country.code, agg)
+		}
+
+		let best = { code: '', ratio: -1 }
+		for (const [code, { wins, games }] of byCountry) {
+			const ratio = games === 0 ? 0 : wins / games
+			if (ratio > best.ratio) best = { code, ratio }
+		}
+
+		// Average BMI
+		const bmis = players.map((p) => {
+			const kg = p.data.weight / 1000
+			const m = p.data.height / 100
+			return kg / (m * m)
+		})
+
+		const averageBmi = bmis.reduce((s, v) => s + v, 0) / bmis.length
+
+		// Median height
+		const heights = players.map((p) => p.data.height).sort((a, b) => a - b)
+		const mid = Math.floor(heights.length / 2)
+		const medianHeight = heights.length % 2 ? heights[mid] : (heights[mid - 1] + heights[mid]) / 2
+
+		return {
+			countryWithBestWinRatio: { code: best.code, ratio: Number(best.ratio.toFixed(4)) },
+			averageBmi: Number(averageBmi.toFixed(2)),
+			medianHeight,
+		}
 	}
 }

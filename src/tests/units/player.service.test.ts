@@ -72,4 +72,30 @@ describe('PlayerService', () => {
 			expect(result.id).toBe(103)
 		})
 	})
+
+	describe('getStatistics', () => {
+		it('picks the country with the highest win ratio', () => {
+			playerRepository.findAll.mockReturnValue([player({ code: 'ESP', last: [1, 1, 1, 1] }), player({ code: 'USA', last: [0, 0, 1, 1] })])
+
+			expect(playerService.getStatistics().countryWithBestWinRatio.code).toBe('ESP')
+		})
+
+		it('averages BMI with gram to kg and cm to m conversion', () => {
+			playerRepository.findAll.mockReturnValue([player({ weight: 80000, height: 200 }), player({ weight: 50000, height: 100 })])
+
+			expect(playerService.getStatistics().averageBmi).toBe(35)
+		})
+
+		it('computes median height for an odd count', () => {
+			playerRepository.findAll.mockReturnValue([player({ height: 175 }), player({ height: 200 }), player({ height: 185 })])
+
+			expect(playerService.getStatistics().medianHeight).toBe(185)
+		})
+
+		it('computes median height for an even count', () => {
+			playerRepository.findAll.mockReturnValue([player({ height: 175 }), player({ height: 185 })])
+
+			expect(playerService.getStatistics().medianHeight).toBe(180)
+		})
+	})
 })
