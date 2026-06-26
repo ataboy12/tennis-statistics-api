@@ -1,6 +1,7 @@
 import { Response } from 'express'
 import { PlayerService } from '../../services/player.service'
 import { PlayerController } from '../../controllers/player.controller'
+import { ValidationError } from '../../errors'
 
 const mockRes = () => {
 	const r: any = {}
@@ -10,19 +11,25 @@ const mockRes = () => {
 }
 
 describe('PlayerController', () => {
-	let playerService: jest.Mocked<Pick<PlayerService, 'getAllSorted'>>
+	let playerService: jest.Mocked<Pick<PlayerService, 'getAllSorted' | 'getById'>>
 	let playerController: PlayerController
 
 	beforeEach(() => {
-		playerService = { getAllSorted: jest.fn() }
+		playerService = { getAllSorted: jest.fn(), getById: jest.fn() }
 		playerController = new PlayerController(playerService as unknown as PlayerService)
 	})
 
-	it('returns the sorted list of players', () => {
+	it('findAll returns the sorted list of players', () => {
 		const list = [{ id: 1 }] as any
 		playerService.getAllSorted.mockReturnValue(list)
 		const res = mockRes()
 		playerController.getAll({} as any, res)
 		expect(res.json).toHaveBeenCalledWith(list)
+	})
+
+	it('getById throws ValidationError on a non integer id', () => {
+		const res = mockRes()
+		expect(() => playerController.getById({ params: { id: 'abc' } } as any, res)).toThrow(ValidationError)
+		expect(playerService.getById).not.toHaveBeenCalled()
 	})
 })

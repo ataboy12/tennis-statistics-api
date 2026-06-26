@@ -1,3 +1,4 @@
+import { NotFoundError } from '../../errors'
 import { PlayerRepository } from '../../repositories/player.repository'
 import { PlayerService } from '../../services/player.service'
 import { Player } from '../../types/player'
@@ -21,11 +22,11 @@ const player = (f: { id?: number; code?: string; rank?: number; weight?: number;
 })
 
 describe('PlayerService', () => {
-	let playerRepository: jest.Mocked<Pick<PlayerRepository, 'findAll'>>
+	let playerRepository: jest.Mocked<Pick<PlayerRepository, 'findAll' | 'findById'>>
 	let playerService: PlayerService
 
 	beforeEach(() => {
-		playerRepository = { findAll: jest.fn() }
+		playerRepository = { findAll: jest.fn(), findById: jest.fn() }
 		playerService = new PlayerService(playerRepository as unknown as PlayerRepository)
 	})
 
@@ -40,6 +41,19 @@ describe('PlayerService', () => {
 			playerRepository.findAll.mockReturnValue(source)
 			playerService.getAllSorted()
 			expect(source.map((p) => p.id)).toEqual([1, 2])
+		})
+	})
+
+	describe('getById', () => {
+		it('returns the player when found', () => {
+			const p = player({ id: 52 })
+			playerRepository.findById.mockReturnValue(p)
+			expect(playerService.getById(52)).toBe(p)
+		})
+
+		it('throws NotFoundError when missing', () => {
+			playerRepository.findById.mockReturnValue(undefined)
+			expect(() => playerService.getById(999)).toThrow(NotFoundError)
 		})
 	})
 })
