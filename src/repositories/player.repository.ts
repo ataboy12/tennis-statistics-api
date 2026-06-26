@@ -7,4 +7,8 @@ export class PlayerRepository {
 	findAll(): Player[] {
 		return this.players
 	}
+
+	findById(id: number): Player | undefined {
+		return this.players.find((p) => p.id === id)
+	}
 }
